@@ -62,8 +62,13 @@ Ahora, le aparecera una URL con una IP local y un puerto, porjemplo
 
 ## Nota Importante!
 
-Por ahora puede colocar su algoritmo, según se explicó en clase en la función
+Por ahora puede colocar su algoritmo, según se explicó en clase, en la función
 peru1 de algorithm.py. Debe desempaquetar el archivo d.json.zip directamente en
-la carpeta static/data y ejecutar la aplicación de manera normal.
+la carpeta static/data y ejecutar la aplicación de manera normal, pero con:
+
+```shell
+set FLASK_APP=tfapp.py
+python -m flask run
+```
 
 :D
