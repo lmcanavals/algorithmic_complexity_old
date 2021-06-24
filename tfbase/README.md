@@ -60,4 +60,10 @@ python -m flask run
 Ahora, le aparecera una URL con una IP local y un puerto, porjemplo
 `http://127.0.0.1:5000`, copie y pegue esa URL en su navegador favorito.
 
+## Nota Importante!
+
+Por ahora puede colocar su algoritmo, según se explicó en clase en la función
+peru1 de algorithm.py. Debe desempaquetar el archivo d.json.zip directamente en
+la carpeta static/data y ejecutar la aplicación de manera normal.
+
 :D
