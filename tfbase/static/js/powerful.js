@@ -10,37 +10,50 @@
 
 	// config
 
-	const width  = 990;
-	const height = 690;
+	const margin = {
+		top:    10,
+		right:  10,
+		bottom: 10,
+		left:   10
+	};
+	const box    = {
+		width:   990,
+		height:  690,
+		bwidth:  990 - margin.left - margin.right,
+	  bheight: 690 - margin.top - margin.bottom
+	};
 
 	// Canvas y elementos
 
 	const projection = d3
 		.geoOrthographic()
-		.scale(2150)
 		.rotate([75.0, 9.2])
-		.translate([width / 2.0, height / 2.0]);
+		.fitSize([box.bwidth, box.bheight], dptos);
 
 	const path = d3.geoPath().projection(projection);
 	const zoom = d3.zoom().scaleExtent([1, 64]).on("zoom", zoomed);
 
-	const l = [2, 5, 2, 9, 6, 5, 5, 3, 3, 2, 2, 2,
-						 9, 2, 9, 9, 9, 2, 3, 9, 5, 5, 9, 2, 6];
+	const l = [30, 1, 14, 2, 25, 17, 16, 15, 10, 11, 9, 8, 7,
+						 19, 4, 22, 21, 20, 5, 3, 24, 13, 12, 23, 6, 18];
 
-	const dpto = (d) => d.properties["IDDPTO"]
-	const wf = (d) => l[dpto(d) - 1];
-	const cf = (d) => `hsl(${220-wf(d)*12}deg ${55+wf(d)*1.5}% ${31+wf(d)*1.5}%)`;
-	const ws = (d) => l[dpto(d) - 1] - 1;
-	const cs = (d) => `hsl(${220-ws(d)*12}deg ${55+ws(d)*1.5}% ${31+ws(d)*1.5}%)`;
+	const numColors = 30;
+	const colors = Array(numColors);
+	for (let i = 0; i < numColors; ++i) {
+		colors[i] = d3.interpolateViridis((i + numColors/2.0) / (numColors*2.0));
+	}
+	const fill   = d => colors[l[+d.properties["IDDPTO"]]+2];
+	const stroke = d => colors[l[+d.properties["IDDPTO"]]+1];
 
 	const svg = d3
 		.select("#box")
 		.append("svg")
-		.attr("width", width)
-		.attr("height", height)
+		.attr("width", box.width)
+		.attr("height", box.height)
+		.call(zoom)
 		.on("click", reset);
 
-	const g = svg.append("g");
+	const g = svg.append("g")
+		.attr("transform", `translate(${margin.left}, ${margin.top})`);
 
 	const peru = g
 		.append("g")
@@ -50,73 +63,79 @@
 		.join("path")
 		.on("click", clicked)
 		.attr("d", path)
-		.attr("fill", cf)
-		.attr("stroke", cs);
+		.attr("fill", fill)
+		.attr("stroke", stroke);
+	
+	peru.append("title").text(d => d.properties["DISTRITO"]);
 
 	for (const d of datapath) {
 		[d["lon"], d["lat"]] = projection([+d["lon"], +d["lat"]]);
 	}
-	const lon = (d) => d["lon"];
-	const lat = (d) => d["lat"];
-	const cp  = (d) => d["cp"];
+	const lon = d => d["lon"];
+	const lat = d => d["lat"];
+	const cp  = d => d["cp"];
 
-	const lineGenerator = d3.line().x(d => lon(d)).y(d => lat(d));
+	const lineGenerator = d3.line().x(lon).y(lat);
 
-	g.append("path")
+	const line = g.append("path")
 		.attr("d", lineGenerator(datapath))
 		.attr("fill", "none")
 		.attr("stroke", "Gold")
+		.attr("stroke-width", 1.5)
 		.attr("opacity", 0.75);
 
-	g.selectAll("circle")
+	const dots = g.selectAll("circle")
 		.data(datapath)
 		.enter()
 		.append("circle")
 		.attr("cx", lon)
 		.attr("cy", lat)
-		.attr("r", 0.125)
+		.attr("r", 2.2)
 		.attr("fill", "Orange");
 
-	svg.call(zoom);
-
 	// Funciones y eventos
-	
-	d3.select("body").on("keypress", (event) => {
-		if (event.keyCode == 32) reset();
+
+	d3.select("body").on("keypress", e => {
+		if (e.keyCode === 32) {
+			reset();
+		}
 	});
 	function reset() {
 		peru.transition().style("fill", null);
-		svg
-			.transition()
+		svg.transition()
 			.duration(750)
 			.call(
 				zoom.transform,
 				d3.zoomIdentity,
-				d3.zoomTransform(svg.node()).invert([width / 2, height / 2])
+				d3.zoomTransform(svg.node()).invert([box.width / 2, box.height / 2])
 			);
 	}
 	function clicked(event, d) {
 		const [[x0, y0], [x1, y1]] = path.bounds(d);
-		const scale = Math.max((x1 - x0) / width, (y1 - y0) / height);
+		const scale = Math.max((x1 - x0) / box.width, (y1 - y0) / box.height);
 		event.stopPropagation();
 		peru.transition().style("fill", null);
 		d3.select(this).transition().style("fill", "Sienna");
-		svg
-			.transition()
-			.duration(1000)
+		svg.transition()
+			.duration(750)
 			.call(
 				zoom.transform,
 				d3.zoomIdentity
-					.translate(width / 2, height / 2)
+					.translate(box.width / 2, box.height / 2)
 					.scale(Math.min(64, 0.9 / scale))
 					.translate(-(x0 + x1) / 2, -(y0 + y1) / 2),
 				d3.pointer(event, svg.node())
 			);
 	}
 	function zoomed(event) {
-		const { transform } = event;
-		g.attr("transform", transform);
-		g.attr("stroke-width", 1 / transform.k);
+		if (event.transform.x == 0 && event.transform.y == 0) {
+			event.transform.x = margin.left;
+			event.transform.y = margin.top;
+		}
+		g.attr("transform", event.transform);
+		g.attr("stroke-width", 1 / event.transform.k);
+		line.attr("stroke-width", 1.5 / event.transform.k);
+		dots.attr("r", 2.2 / event.transform.k);
 	}
 
 	// Empezamos
