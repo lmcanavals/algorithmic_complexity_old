@@ -18,9 +18,9 @@
 	};
 	const box    = {
 		width:   990,
-		height:  690,
+		height:  695,
 		bwidth:  990 - margin.left - margin.right,
-	  bheight: 690 - margin.top - margin.bottom
+	  bheight: 695 - margin.top - margin.bottom
 	};
 
 	// Canvas y elementos
@@ -65,25 +65,20 @@
 		.attr("d", path)
 		.attr("fill", fill)
 		.attr("stroke", stroke);
-	
+
 	peru.append("title").text(d => d.properties["DISTRITO"]);
 
+	const [lon, lat] = [d => d["lon"], d => d["lat"]];
 	for (const d of datapath) {
-		[d["lon"], d["lat"]] = projection([+d["lon"], +d["lat"]]);
+		[d["lon"], d["lat"]] = projection([+lon(d), +lat(d)]);
 	}
-	const lon = d => d["lon"];
-	const lat = d => d["lat"];
-	const cp  = d => d["cp"];
-
 	const lineGenerator = d3.line().x(lon).y(lat);
-
 	const line = g.append("path")
 		.attr("d", lineGenerator(datapath))
 		.attr("fill", "none")
 		.attr("stroke", "Gold")
 		.attr("stroke-width", 1.5)
 		.attr("opacity", 0.75);
-
 	const dots = g.selectAll("circle")
 		.data(datapath)
 		.enter()
@@ -91,7 +86,10 @@
 		.attr("cx", lon)
 		.attr("cy", lat)
 		.attr("r", 2.2)
-		.attr("fill", "Orange");
+		.attr("fill", "Orange")
+		.attr("opacity", 0.75);
+
+	dots.append("title").text(d => d["cp"]);
 
 	// Funciones y eventos
 
