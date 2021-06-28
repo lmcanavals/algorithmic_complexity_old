@@ -26,8 +26,31 @@ def algorithm():
 
 def peru1():
     data = pd.read_csv(url)
+    dptos = data["DEPARTAMENTO"].unique()
+    for dpto in dptos:
+        dfdpto = data[data["DEPARTAMENTO"] == dpto]
+        provs = dfdpto["PROVINCIA"].unique()
+        for prov in provs:
+            dfprov = dfdpto[dfdpto["PROVINCIA"] == prov]
+            dists = dfprov["DISTRITO"].unique()
+            for dist in dists:
+                dfdist = dfprov[dfprov["DISTRITO"] == dist]
+                # generar grafo
+                # aplicar algoritmo
+                # guardar pathdistrito
+
+            # concatenar pathdistrito de toda la provincia
+            # guardar pathprovincia
+
+        # concatenar pathprovincia para todo el depto
+        # guardar pathdepartamento
+
+    # concatenar pathdepartamento para todo el peru
+    # guardar pathperu
+    # generar responsePath
+
     responsePath = []
-    for i, row in data.iterrows():
+    for i, row in data.iterrows(): ## de pathperu
         responsePath.append({"cp": row["CENTRO POBLADO"],
                              "lat": float(row["LATITUD"]),
                              "lon": float(row["LONGITUD"])})
